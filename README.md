@@ -1,0 +1,2 @@
+# Reversi
+Primitive Monte Carlo
