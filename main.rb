@@ -61,6 +61,8 @@ class Board
       end
     end
     self.update_arround(hand)
+    @stone += 1
+    @turn == 1 ? @black += 1 : @white += 1
     @turn *= -1
   end
   def check(hand) # 指し手が合法手であるか判定しtrue/falseを返す
