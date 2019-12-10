@@ -1,9 +1,8 @@
-require 'matrix'
-
 # 定数
 X = 0; Y = 1
-B = "●"; W = "○"
-Arround = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]]
+STONE = 64 # 全マス数
+B = "●"; W = "○" # 石の描画
+ARROUND = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]] 
 
 class Board
   
@@ -34,7 +33,7 @@ class Board
     
     # 8方向のチェック
     8.times do |i|
-      x = hand[X]+Arround[i][X]; y = hand[Y]+Arround[i][Y]
+      x = hand[X]+ARROUND[i][X]; y = hand[Y]+ARROUND[i][Y]
       count = 0
       while true
         if @board_arr[y] == nil
@@ -52,17 +51,19 @@ class Board
           break
         end
         count += 1
-        x += Arround[i][X]; y += Arround[i][Y]
+        x += ARROUND[i][X]; y += ARROUND[i][Y]
       end
       #puts(count)
       count.times do |j|
-        puts(hand[Y]+j*Arround[i][Y],hand[X]+j*Arround[i][X])
-        board_arr[hand[Y]+(j+1)*Arround[i][Y]][hand[X]+(j+1)*Arround[i][X]] = @turn
+        puts(hand[Y]+j*ARROUND[i][Y],hand[X]+j*ARROUND[i][X])
+        board_arr[hand[Y]+(j+1)*ARROUND[i][Y]][hand[X]+(j+1)*ARROUND[i][X]] = @turn
       end
+      @black += @turn * count
+      @white -= @turn * count
     end
     self.update_arround(hand)
+    @turn ? @black += 1 : @white += 1
     @stone += 1
-    @turn == 1 ? @black += 1 : @white += 1
     @turn *= -1
   end
   def check(hand) # 指し手が合法手であるか判定しtrue/falseを返す
@@ -71,7 +72,7 @@ class Board
       return false
     end
     8.times do |i|
-      x = hand[X]+Arround[i][X]; y = hand[Y]+Arround[i][Y]
+      x = hand[X]+ARROUND[i][X]; y = hand[Y]+ARROUND[i][Y]
       count = 0
       while true
         if board_arr[y] == nil
@@ -89,19 +90,23 @@ class Board
           break
         end
         count += 1
-        x += Arround[i][X]; y += Arround[i][Y]
+        x += ARROUND[i][X]; y += ARROUND[i][Y]
       end
       if count > 0 then return true end
     end
     return false
   end
   def generate # 合法手の配列を返す
-    return [1,9] #########
+    legal = Array.new
+    @arround.each do |hand|
+      if self.check(hand) then legal.push(hand) end
+    end
+    return legal
   end
   def update_arround(move) # @arroundの更新
     @arround.delete(move)
     8.times do |i|
-      tmp = [move[X] + Arround[i][X], move[Y] + Arround[i][Y]]
+      tmp = [move[X] + ARROUND[i][X], move[Y] + ARROUND[i][Y]]
       if @board_arr == 0 then @arround.push(move).uniq! end
     end
   end
@@ -149,7 +154,35 @@ class CPU
     @try_times = try_times
   end
   def move(board) # 指し手を決定し返す
-
+    return tryout(board)
+  end
+  def tryout(board) # 指定回数トライアウトをし、最大勝率の手を返す
+    can_move = board.generate # 合法手列挙
+    move_number = can_move.length # 合法手の数
+    try = @try_times / move_number # 1手あたりのトライアウト数
+    max_move = 0 # 勝利数が最大の手
+    max_win = 0 # 最大の勝利数
+    can_move.each_index do |i|
+      board_i = board.dup.move(can_move[i])
+      win = 0
+      try.times do
+        tmp_board = board_i.dup
+        # ランダムに手を選び終局まで進める
+        endflg = false
+        until tmp_board.stone == STONE
+          tmp_can_move = tmp_board.generate
+          if tmp_can_move.length == 0 # パスの処理
+            endflg ? break : endflg = true
+          end
+          tmp_board.move(tmp_can_move.sample) # 合法手の一覧からランダムに取り出して実行する
+        end
+        if tmp_board.win_player == @turn then win += 1 end
+      end
+      if win > max_win
+        max_move = i; max_win = win
+      end
+    end
+    return can_move[i]
   end
 end
 
@@ -170,9 +203,9 @@ class Game
       @white_player = Human.new(2)
     when 1 then
       print("You are first? Yes(0)/No(1)/Random(2)\n> ")
-      tmp = gets.chomp
+      tmp = gets.chomp.to_i
       print("\nCPU's try times(natural number)?\n> ")
-      try_times = gets.chomp
+      try_times = gets.chomp.to_i
       if tmp == 2 then tmp = rand(2) end
       if tmp == 0
         @black_player = Human.new(-1)
@@ -183,15 +216,15 @@ class Game
       end
     when 2 then
       print("1st CPU's try times(natural number)?\n> ")
-      first_try = gets.chomp
+      first_try = gets.chomp.to_i
       print("\n2nd CPU's try times(natural number)?\n> ")
-      second_try = gets.chomp
+      second_try = gets.chomp.to_i
       @black_player = CPU.new(true,first_try)
       @white_player = CPU.new(false,second_try)
     end
   end
   def play
-    until(@mainboard.stone == 64)
+    until(@mainboard.stone == STONE)
       self.display_board
       if @mainboard.generate.length == 0
         if endflg
