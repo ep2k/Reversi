@@ -2,6 +2,7 @@ require 'matrix'
 
 # 定数
 X = 0; Y = 1
+B = "●"; W = "○"
 Arround = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]]
 
 class Board
@@ -9,6 +10,7 @@ class Board
   attr_reader :stone
   attr_reader :black
   attr_reader :white
+  attr_reader :board_arr
   def initialize
     @turn = 1 # 現在の手番(1:先手,-1:後手)
     @stone = 4 # 全石の数
@@ -97,6 +99,7 @@ class Board
 end
 
 class Human
+  attr_reader :name
   def initialize(mode) # mode: 1,2 対人間/ -1,-2 対CPU
     @name = mode>0 ? "#{mode}P" : "You" # 表示名
     @turn = mode.abs == 1 ? 1 : -1 # 1:先手,-1:後手
@@ -122,6 +125,7 @@ class Human
 end
 
 class CPU
+  attr_reader :name
   def initialize(turn,try_times) # turnは1なら先手
     @name = "CPU" + try_times.to_s
     @turn = turn
@@ -200,6 +204,23 @@ class Game
     print(" (#{@mainboard.black}-#{@mainboard.white})\n\n")
   end
   def display_board
-    
+    vert = "  --- --- --- --- --- --- --- ---"
+    print("   1   2   3   4   5   6   7   8\n" + vert)
+    8.times do |y|
+      print(vert + "\n{y+1}|")
+      8.times do |x|
+        case @mainboard.board_arr[y][x]
+        when 0
+          symbol = " "
+        when 1
+          symbol = B
+        when -1
+          symbol = W
+        end
+        print(" " + symbol + " |")
+      end
+    end
+    print("\n" + vert + "\n\n")
+    print(" " * 6 + @black_player.name + " " * 3 + @white_player.name + "\n\n")
   end
 end
