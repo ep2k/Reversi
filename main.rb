@@ -7,6 +7,8 @@ Arround = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]]
 class Board
   
   attr_reader :stone
+  attr_reader :black
+  attr_reader :white
   def initialize
     @turn = 1 # 現在の手番(1:先手,-1:後手)
     @stone = 4 # 全石の数
@@ -169,7 +171,7 @@ class Game
   end
   def play
     until(@mainboard.stone == 64)
-      self.display
+      self.display_board
       if @mainboard.generate.length == 0
         if endflg
           break
@@ -186,9 +188,18 @@ class Game
       end
       turn *= -1
     end
-    
+    print("\n\n")
+    case @mainboard.win_player
+    when 0
+      print("Draw")
+    when 1
+      print(@black_player.name + " win!")
+    when -1
+      print(@white_player.name + " win!")
+    end
+    print(" (#{@mainboard.black}-#{@mainboard.white})\n\n")
   end
   def display_board
-
+    
   end
 end
