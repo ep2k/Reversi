@@ -73,6 +73,9 @@ class Board
     end
     return false
   end
+  def generate # 合法手の配列を返す
+
+  end
   def update_arround(move) # @arroundの更新
     @arround.delete(move)
     8.times do |i|
@@ -97,7 +100,21 @@ class Human
     @turn = mode.abs == 1 ? 1 : -1 # 1:先手,-1:後手
   end
   def move(board) # 指し手を選択させる
-
+    print("\n" + @name + " : Please choose your hand.(right down) (ex. 4 5)\n> ")
+    while(flg) # 正しい座標を入力するまで繰り返す
+      flg = true
+      hand_input = wget.chomp
+      hand_input = wget.chomp
+      hand = [hand_input[0] - 1, hand_input[2] - 1]
+      if hand[0] < 0 || hand[0] > 8 || hand[1] < 0 || hand[1] > 0 # 盤外
+        print("\nPlease input correct position!\n> ")
+        flg = false
+      elsif !board.check(hand) # 合法手でない
+        print("\nYou can't put it there.\n> ")
+        flg = false
+      end
+    end
+    return hand
   end
 
 end
@@ -109,9 +126,6 @@ class CPU
     @try_times = try_times
   end
   def move(board) # 指し手を決定し返す
-
-  end
-  def generate(board) # 合法手を生成し配列として返す
 
   end
 end
@@ -154,17 +168,27 @@ class Game
     end
   end
   def play
-    until(mainboard.stone == 64)
+    until(@mainboard.stone == 64)
       self.display
-      if turn
-
-      else
-
+      if @mainboard.generate.length == 0
+        if endflg
+          break
+        else
+          endfig = true
+          turn *= -1
+          next
+        end
       end
-      turn = !turn
+      if turn == 1
+        self.move(@black_player.move(@mainboard))
+      else
+        self.move(@white_player.move(@mainboard))
+      end
+      turn *= -1
     end
+    
   end
-  def display
+  def display_board
 
   end
 end
