@@ -2,6 +2,7 @@
 X = 0; Y = 1
 STONE = 64 # 全マス数
 B = "●"; W = "○" # 石の描画
+COORD = 0..7 # 正しい座標の範囲
 ARROUND = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]] 
 
 class Board
@@ -29,6 +30,7 @@ class Board
 
   end
   def move(hand) # 指し手を与えた結果の盤面を返す,違法手であった場合のことは考慮していない(Human,CPUクラス内で防ぐ)
+    print(@board_arr)
     @board_arr[hand[Y]][hand[X]] = @turn
     
     # 8方向のチェック
@@ -36,7 +38,7 @@ class Board
       x = hand[X]+ARROUND[i][X]; y = hand[Y]+ARROUND[i][Y]
       count = 0
       while true
-        if @board_arr[y] == nil
+        if !COORD.include?(x) || !COORD.include?(y)
           count = 0
           break
         end
@@ -46,16 +48,13 @@ class Board
         when 0 then
           count = 0
           break
-        when nil then
-          count = 0
-          break
         end
         count += 1
         x += ARROUND[i][X]; y += ARROUND[i][Y]
       end
       #puts(count)
       count.times do |j|
-        puts(hand[Y]+j*ARROUND[i][Y],hand[X]+j*ARROUND[i][X])
+        #puts(hand[Y]+j*ARROUND[i][Y],hand[X]+j*ARROUND[i][X])
         board_arr[hand[Y]+(j+1)*ARROUND[i][Y]][hand[X]+(j+1)*ARROUND[i][X]] = @turn
       end
       @black += @turn * count
@@ -75,17 +74,14 @@ class Board
       x = hand[X]+ARROUND[i][X]; y = hand[Y]+ARROUND[i][Y]
       count = 0
       while true
-        if board_arr[y] == nil
+        if (!COORD.include?(x) || !COORD.include?(y))
           count = 0
           break
         end
-        case board_arr[y][x]
-        when turn then
+        case @board_arr[y][x]
+        when @turn then
           break
         when 0 then
-          count = 0
-          break
-        when nil then
           count = 0
           break
         end
@@ -99,7 +95,7 @@ class Board
   def generate # 合法手の配列を返す
     legal = Array.new
     @arround.each do |hand|
-      if self.check(hand) then legal.push(hand) end
+      if self.check(hand) then legal.push(hand.dup) end
     end
     return legal
   end
@@ -107,7 +103,8 @@ class Board
     @arround.delete(move)
     8.times do |i|
       tmp = [move[X] + ARROUND[i][X], move[Y] + ARROUND[i][Y]]
-      if @board_arr == 0 then @arround.push(move).uniq! end
+      if (!COORD.include?(tmp[X]) || !COORD.include?(tmp[Y])) then next end
+      if @board_arr[tmp[Y]][tmp[X]] == 0 then @arround.push(tmp).uniq! end
     end
   end
   def win_player
@@ -162,8 +159,10 @@ class CPU
     try = @try_times / move_number # 1手あたりのトライアウト数
     max_move = 0 # 勝利数が最大の手
     max_win = 0 # 最大の勝利数
+    print(can_move)
     can_move.each_index do |i|
-      board_i = board.dup.move(can_move[i])
+      board_i = board.dup
+      board_i.move(can_move[i])
       win = 0
       try.times do
         tmp_board = board_i.dup
@@ -171,18 +170,26 @@ class CPU
         endflg = false
         until tmp_board.stone == STONE
           tmp_can_move = tmp_board.generate
-          if tmp_can_move.length == 0 # パスの処理
-            endflg ? break : endflg = true
+          if tmp_can_move.empty? # パスの処理
+            if(endflg)
+              break
+            else
+              endflg = true
+              tmp_board.turn *= -1
+              next
+            end
           end
           tmp_board.move(tmp_can_move.sample) # 合法手の一覧からランダムに取り出して実行する
+          endflg = false
         end
         if tmp_board.win_player == @turn then win += 1 end
       end
+      print("#{i},#{win}\n")
       if win > max_win
         max_move = i; max_win = win
       end
     end
-    return can_move[i]
+    return can_move[max_move]
   end
 end
 
@@ -224,21 +231,22 @@ class Game
     end
   end
   def play
+    endflg = false
     until(@mainboard.stone == STONE)
       self.display_board
       if @mainboard.generate.length == 0
         if endflg
           break
         else
-          endfig = true
+          endflg = true
           @mainboard.turn *= -1
           next
         end
       end
       if @mainboard.turn == 1
-        @mainboard.move(@black_player.move(@mainboard))
+        @mainboard.move(@black_player.move(@mainboard.dup))
       else
-        @mainboard.move(@white_player.move(@mainboard))
+        @mainboard.move(@white_player.move(@mainboard.dup))
       end
     end
     print("\n\n")
