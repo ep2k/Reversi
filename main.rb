@@ -11,7 +11,8 @@ class Board
   attr_reader :stone
   attr_reader :black
   attr_reader :white
-  attr_reader :board_arr
+  attr_accessor :board_arr
+  attr_accessor :arround
   def initialize
     @turn = 1 # 現在の手番(1:先手,-1:後手)
     @stone = 4 # 全石の数
@@ -27,10 +28,9 @@ class Board
     
     # 現在存在する石の周囲のマス
     @arround = [[2,2],[3,2],[4,2],[5,2],[2,3],[5,3],[2,4],[5,4],[2,5],[3,5],[4,5],[5,5]]
-
   end
   def move(hand) # 指し手を与えた結果の盤面を返す,違法手であった場合のことは考慮していない(Human,CPUクラス内で防ぐ)
-    print(@board_arr)
+    #print(@board_arr)
     @board_arr[hand[Y]][hand[X]] = @turn
     
     # 8方向のチェック
@@ -61,7 +61,7 @@ class Board
       @white -= @turn * count
     end
     self.update_arround(hand)
-    @turn ? @black += 1 : @white += 1
+    @turn == 1 ? @black += 1 : @white += 1
     @stone += 1
     @turn *= -1
   end
@@ -108,9 +108,9 @@ class Board
     end
   end
   def win_player
-    if black > white
+    if @black > @white
       return 1
-    elsif black < white
+    elsif @black < @white
       return -1
     else
       return 0
@@ -161,11 +161,11 @@ class CPU
     max_win = 0 # 最大の勝利数
     print(can_move)
     can_move.each_index do |i|
-      board_i = board.dup
+      board_i = Marshal.load(Marshal.dump(board))
       board_i.move(can_move[i])
       win = 0
       try.times do
-        tmp_board = board_i.dup
+        tmp_board = Marshal.load(Marshal.dump(board_i))
         # ランダムに手を選び終局まで進める
         endflg = false
         until tmp_board.stone == STONE
@@ -216,9 +216,9 @@ class Game
       if tmp == 2 then tmp = rand(2) end
       if tmp == 0
         @black_player = Human.new(-1)
-        @white_player = CPU.new(false,try_times)
+        @white_player = CPU.new(-1,try_times)
       else
-        @black_player = CPU.new(true,try_times)
+        @black_player = CPU.new(1,try_times)
         @white_player = Human.new(-2)
       end
     when 2 then
@@ -226,8 +226,8 @@ class Game
       first_try = gets.chomp.to_i
       print("\n2nd CPU's try times(natural number)?\n> ")
       second_try = gets.chomp.to_i
-      @black_player = CPU.new(true,first_try)
-      @white_player = CPU.new(false,second_try)
+      @black_player = CPU.new(1,first_try)
+      @white_player = CPU.new(-1,second_try)
     end
   end
   def play
@@ -244,9 +244,9 @@ class Game
         end
       end
       if @mainboard.turn == 1
-        @mainboard.move(@black_player.move(@mainboard.dup))
+        @mainboard.move(@black_player.move(Marshal.load(Marshal.dump(@mainboard))))
       else
-        @mainboard.move(@white_player.move(@mainboard.dup))
+        @mainboard.move(@white_player.move(Marshal.load(Marshal.dump(@mainboard))))
       end
     end
     print("\n\n")
