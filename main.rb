@@ -126,8 +126,12 @@ class Human
     print(@name + " : Please choose your hand.(right, down) ex. 4 5\n> ")
     while(true) # 正しい座標を入力するまで繰り返す
       hand_input = gets.chomp
+      unless hand_input[1] == " "
+        print("\nPlease input in correct format. ex. 4 5\n> ")
+        next
+      end
       hand = [hand_input[0].to_i - 1, hand_input[2].to_i - 1]
-      if ((hand[0] < 0) || (hand[0]) > 8 || (hand[1] < 0) || (hand[1] > 8)) # 盤外
+      if (!COORD.include?(hand[0]) || !COORD.include?(hand[1])) # 盤外
         print("\nPlease input correct position!\n> ")
         next
       elsif !board.check(hand) # 合法手でない
@@ -197,31 +201,51 @@ class Game
   end
   def start
     print("\n//// Reversi //////\n\n")
-    print("Please choose(0~2).\n0:Human vs Human\n1:Human vs CPU\n2:CPU vs CPU\n> ")
-    mode = gets.chomp
+    print("Please choose(1~3).\n1:Human vs Human\n2:Human vs CPU\n3:CPU vs CPU\n> ")
+    while true
+      mode = gets.chomp.to_i
+      if (1..3).include?(mode) then break end
+      print("\nPlease input correct number! (1~3)\n> ")
+    end
     print("\n")
-    case mode.to_i
-    when 0 then
+    case mode
+    when 1 then
       @black_player = Human.new(1)
       @white_player = Human.new(2)
-    when 1 then
-      print("You are first? Yes(0)/No(1)/Random(2)\n> ")
-      tmp = gets.chomp.to_i
+    when 2 then
+      print("You are first? Yes(1)/No(2)/Random(3)\n> ")
+      while true
+        tmp = gets.chomp.to_i
+        if (1..3).include?(tmp) then break end
+        print("\nPlease input correct number! (1~3)\n> ")
+      end
       print("\nCPU's try times(natural number)?\n> ")
-      try_times = gets.chomp.to_i
-      if tmp == 2 then tmp = rand(2) end
-      if tmp == 0
+      while true
+        try_times = gets.chomp.to_i
+        if try_times > 0 then break end
+        print("\nPlease input natural number.\n> ")
+      end
+      if tmp == 3 then tmp = rand(2) end
+      if tmp == 1
         @black_player = Human.new(-1)
         @white_player = CPU.new(-1,try_times)
       else
         @black_player = CPU.new(1,try_times)
         @white_player = Human.new(-2)
       end
-    when 2 then
+    when 3 then
       print("1st CPU's try times(natural number)?\n> ")
-      first_try = gets.chomp.to_i
+      while true
+        first_try = gets.chomp.to_i
+        if first_try > 0 then break end
+        print("\nPlease input natural number.\n> ")
+      end
       print("\n2nd CPU's try times(natural number)?\n> ")
-      second_try = gets.chomp.to_i
+      while true
+        second_try = gets.chomp.to_i
+        if second_try > 0 then break end
+        print("\nPlease input natural number.\n> ")
+      end
       @black_player = CPU.new(1,first_try)
       @white_player = CPU.new(-1,second_try)
     end
