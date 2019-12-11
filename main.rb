@@ -2,9 +2,9 @@
 X = 0; Y = 1
 STONE = 64 # 全マス数
 B = "\e[#{31}m●\e[0m"; W = "\e[#{32}m●\e[0m" # 石の描画
-BN = "\e[#{31}m■\e[0m"; WN = "\e[#{32}m■\e[0m" # 石の描画
+BN = "\e[#{31}m■\e[0m"; WN = "\e[#{32}m■\e[0m" # 新しく置かれた石の描画
 COORD = 0..7 # 正しい座標の範囲
-ARROUND = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]] 
+ARROUND = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]]
 
 class Board
   
@@ -30,11 +30,10 @@ class Board
     # 現在存在する石の周囲のマス
     @arround = [[2,2],[3,2],[4,2],[5,2],[2,3],[5,3],[2,4],[5,4],[2,5],[3,5],[4,5],[5,5]]
   end
+
   def move(hand) # 指し手を与えた結果の盤面を返す,違法手であった場合のことは考慮していない(Human,CPUクラス内で防ぐ)
     @board_arr[hand[Y]][hand[X]] = @turn
-    
-    # 8方向のチェック
-    8.times do |i|
+    8.times do |i| # 8方向のチェック
       x = hand[X]+ARROUND[i][X]; y = hand[Y]+ARROUND[i][Y]
       count = 0
       while true
@@ -58,11 +57,12 @@ class Board
       @black += @turn * count
       @white -= @turn * count
     end
-    self.update_arround(hand)
+    update_arround(hand)
     @turn == 1 ? @black += 1 : @white += 1
     @stone += 1
     @turn *= -1
   end
+
   def check(hand) # 指し手が合法手であるか判定しtrue/falseを返す
     # moveメソッドのうち、必要のない処理を省略した
     unless @board_arr[hand[Y]][hand[X]] == 0
@@ -97,14 +97,7 @@ class Board
     end
     return legal
   end
-  def update_arround(move) # @arroundの更新
-    @arround.delete(move)
-    8.times do |i|
-      tmp = [move[X] + ARROUND[i][X], move[Y] + ARROUND[i][Y]]
-      if (!COORD.include?(tmp[X]) || !COORD.include?(tmp[Y])) then next end
-      if @board_arr[tmp[Y]][tmp[X]] == 0 then @arround.push(tmp).uniq! end
-    end
-  end
+
   def win_player
     if @black > @white
       return 1
@@ -114,6 +107,18 @@ class Board
       return 0
     end
   end
+
+  private
+
+  def update_arround(move) # @arroundの更新
+    @arround.delete(move)
+    8.times do |i|
+      tmp = [move[X] + ARROUND[i][X], move[Y] + ARROUND[i][Y]]
+      if (!COORD.include?(tmp[X]) || !COORD.include?(tmp[Y])) then next end
+      if @board_arr[tmp[Y]][tmp[X]] == 0 then @arround.push(tmp).uniq! end
+    end
+  end
+  
 end
 
 class Human
@@ -122,6 +127,7 @@ class Human
     @name = mode>0 ? "#{mode}P" : "You" # 表示名
     @turn = mode.abs == 1 ? 1 : -1 # 1:先手,-1:後手
   end
+
   def move(board) # 指し手を選択させる
     print(@name + " : Please choose your hand.(right, down) ex. 4 5\n> ")
     while(true) # 正しい座標を入力するまで繰り返す
@@ -131,7 +137,7 @@ class Human
         next
       end
       hand = [hand_input[0].to_i - 1, hand_input[2].to_i - 1]
-      if (!COORD.include?(hand[0]) || !COORD.include?(hand[1])) # 盤外
+      if (!COORD.include?(hand[X]) || !COORD.include?(hand[Y])) # 盤外
         print("\nPlease input correct position!\n> ")
         next
       elsif !board.check(hand) # 合法手でない
