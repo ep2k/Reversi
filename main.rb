@@ -155,10 +155,10 @@ class CPU
   def move(board) # 指し手を決定し返す
     return simulate(board)
   end
-  def simulate(board) # 指定回数シミュレーションし、最大勝率の手を返す
+  def simulate(board) # 指定回数シミュレートし、最大勝率の手を返す
     can_move = board.generate # 合法手列挙
     move_number = can_move.length # 合法手の数
-    try = @try_times / move_number # 1手あたりのシミュレーション数
+    try = @try_times / move_number # 1手あたりのシミュレート数
     max_move = 0 # 勝利数が最大の手
     max_win = 0 # 最大の勝利数
     can_move.each_index do |i|
