@@ -1,7 +1,8 @@
 # 定数
 X = 0; Y = 1
 STONE = 64 # 全マス数
-B = "●"; W = "○" # 石の描画
+B = "\e[#{31}m●\e[0m"; W = "\e[#{32}m●\e[0m" # 石の描画
+BN = "\e[#{31}m■\e[0m"; WN = "\e[#{32}m■\e[0m" # 石の描画
 COORD = 0..7 # 正しい座標の範囲
 ARROUND = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]] 
 
@@ -30,7 +31,6 @@ class Board
     @arround = [[2,2],[3,2],[4,2],[5,2],[2,3],[5,3],[2,4],[5,4],[2,5],[3,5],[4,5],[5,5]]
   end
   def move(hand) # 指し手を与えた結果の盤面を返す,違法手であった場合のことは考慮していない(Human,CPUクラス内で防ぐ)
-    #print(@board_arr)
     @board_arr[hand[Y]][hand[X]] = @turn
     
     # 8方向のチェック
@@ -52,9 +52,7 @@ class Board
         count += 1
         x += ARROUND[i][X]; y += ARROUND[i][Y]
       end
-      #puts(count)
       count.times do |j|
-        #puts(hand[Y]+j*ARROUND[i][Y],hand[X]+j*ARROUND[i][X])
         board_arr[hand[Y]+(j+1)*ARROUND[i][Y]][hand[X]+(j+1)*ARROUND[i][X]] = @turn
       end
       @black += @turn * count
@@ -159,7 +157,6 @@ class CPU
     try = @try_times / move_number # 1手あたりのトライアウト数
     max_move = 0 # 勝利数が最大の手
     max_win = 0 # 最大の勝利数
-    print(can_move)
     can_move.each_index do |i|
       board_i = Marshal.load(Marshal.dump(board))
       board_i.move(can_move[i])
@@ -184,7 +181,6 @@ class CPU
         end
         if tmp_board.win_player == @turn then win += 1 end
       end
-      print("#{i},#{win}\n")
       if win > max_win
         max_move = i; max_win = win
       end
@@ -244,11 +240,15 @@ class Game
         end
       end
       if @mainboard.turn == 1
-        @mainboard.move(@black_player.move(Marshal.load(Marshal.dump(@mainboard))))
+        nextmove = @black_player.move(Marshal.load(Marshal.dump(@mainboard)))
       else
-        @mainboard.move(@white_player.move(Marshal.load(Marshal.dump(@mainboard))))
+        nextmove = @white_player.move(Marshal.load(Marshal.dump(@mainboard)))
       end
+      self.display_board(nextmove)
+      sleep(1)
+      @mainboard.move(nextmove)
     end
+    self.display_board
     print("\n\n")
     case @mainboard.win_player
     when 0 then
@@ -260,26 +260,37 @@ class Game
     end
     print(" (#{@mainboard.black}-#{@mainboard.white})\n\n")
   end
-  def display_board
+  def display_board(new_pos=nil)
+    puts "\e[H\e[2J"
+    can_move = @mainboard.generate
     vert = "  --- --- --- --- --- --- --- ---"
     print("\n   1   2   3   4   5   6   7   8\n")
     8.times do |y|
       print(vert + "\n#{y+1}|")
       8.times do |x|
-        case @mainboard.board_arr[y][x]
-        when 0 then
-          symbol = " "
-        when 1 then
-          symbol = B
-        when -1 then
-          symbol = W
+        if [x,y] == new_pos
+          case @mainboard.turn
+          when 1 then
+            symbol = BN
+          when -1 then 
+            symbol = WN
+          end
+        else
+          case @mainboard.board_arr[y][x]
+          when 0 then
+            symbol = can_move.include?([x,y]) ? "-" : " "
+          when 1 then
+            symbol = B
+          when -1 then
+            symbol = W
+          end
         end
         print(" " + symbol + " |")
       end
       print("\n")
     end
     print(vert + "\n\n")
-    print(" " * 6 + B + " : " + @black_player.name + " " * 3 + W + " : " + @white_player.name + "\n\n")
+    print(" " * 6 + B + " : #{@black_player.name}(#{@mainboard.black})" + " " * 3 + W + " : #{@white_player.name}(#{@mainboard.white})\n\n")
   end
 end
 
