@@ -219,7 +219,7 @@ class Game
         if (1..3).include?(tmp) then break end
         print("\nPlease input correct number! (1~3)\n> ")
       end
-      print("\nCPU's try times(natural number)?\n> ")
+      print("\nCPU's simulation times(natural number)?\n> ")
       while true
         try_times = gets.chomp.to_i
         if try_times > 0 then break end
@@ -234,13 +234,13 @@ class Game
         @white_player = Human.new(-2)
       end
     when 3 then
-      print("1st CPU's try times(natural number)?\n> ")
+      print("1st CPU's simulation times(natural number)?\n> ")
       while true
         first_try = gets.chomp.to_i
         if first_try > 0 then break end
         print("\nPlease input natural number.\n> ")
       end
-      print("\n2nd CPU's try times(natural number)?\n> ")
+      print("\n2nd CPU's simulation times(natural number)?\n> ")
       while true
         second_try = gets.chomp.to_i
         if second_try > 0 then break end
