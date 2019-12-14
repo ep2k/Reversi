@@ -4,7 +4,7 @@ STONE = 64 # 全マス数
 B = "\e[#{31}m●\e[0m"; W = "\e[#{32}m●\e[0m" # 石の描画
 BN = "\e[#{31}m■\e[0m"; WN = "\e[#{32}m■\e[0m" # 新しく置かれた石の描画
 COORD = 0..7 # 正しい座標の範囲
-ARROUND = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]]
+ARROUND = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]] # 8方を表す配列
 
 class Board
   
@@ -153,7 +153,7 @@ end
 
 class CPU
   attr_reader :name
-  def initialize(turn,try_times) # turnは1なら先手
+  def initialize(turn,try_times) # turnは1なら先手,-1なら後手
     @name = "CPU" + try_times.to_s
     @turn = turn
     @try_times = try_times
@@ -189,7 +189,12 @@ class CPU
           tmp_board.move(tmp_can_move.sample) # 合法手の一覧からランダムに取り出して実行する
           endflg = false
         end
-        if tmp_board.win_player == @turn then win += 1 end
+        case tmp_board.win_player
+        when @turn then
+          win += 1
+        when 0 then
+          win += 0.3
+        end
       end
       if win > max_win
         max_move = i; max_win = win
@@ -269,6 +274,7 @@ class Game
           next
         end
       end
+      endflg = false
       if @mainboard.turn == 1
         nextmove = @black_player.move(Marshal.load(Marshal.dump(@mainboard)))
       else
