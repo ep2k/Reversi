@@ -8,12 +8,8 @@ ARROUND = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]] # 8方を表�
 
 class Board
   
-  attr_accessor :turn
-  attr_reader :stone
-  attr_reader :black
-  attr_reader :white
-  attr_accessor :board_arr
-  attr_accessor :arround
+  attr_accessor :turn, :board_arr, :arround
+  attr_reader :stone, :black, :white
   def initialize
     @turn = 1 # 現在の手番(1:先手,-1:後手)
     @stone = 4 # 全石の数
